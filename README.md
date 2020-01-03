@@ -9,3 +9,4 @@ Participants will be presented with 3 similar grating sequences per trial. Their
 Participants are supposed to earn a small ammount of money for each correct response (max 3 euros).
 There is a staircase constantily updating the difficulty as a function of the response in the first trial sequence of each triplet.
 The response mapping change randomly in each trial sequence presentation to minimize response biases that could explain the decision biases.
+The fixation point duration previous to the surround circle presentation is jittered at the trial level.
