@@ -1,4 +1,4 @@
-# ConCN v1.0
+# ConCN v1.0 - Pérez-Bellido 2020
 
 This is the first version of the condcision project (confirmation bias project)
 It includes a function to measure the participant threshold using a staircase, a functional localizer (it should be reviewed to check whether it is compatible with this new experiment) and the main experiment.
@@ -10,3 +10,4 @@ Participants are supposed to earn a small ammount of money for each correct resp
 There is a staircase constantily updating the difficulty as a function of the response in the first trial sequence of each triplet.
 The response mapping change randomly in each trial sequence presentation to minimize response biases that could explain the decision biases.
 The fixation point duration previous to the surround circle presentation is jittered at the trial level.
+
