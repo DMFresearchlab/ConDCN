@@ -4,7 +4,7 @@
 # Code for the confirmation bias experiment (using predcision code)
 
 
-version = 1.0
+version = 1.1
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
@@ -29,6 +29,21 @@ event.globalKeys.clear() # implementing a global event to quit the program at an
 event.globalKeys.add(key='q', modifiers=['ctrl'], func=core.quit)
 
 
+sst = False # Using parallel port to send triggers
+
+if sst: 
+    p_port = serial.Serial('COM3', 115200, timeout = 0) # this is for windows
+    p_port.write(b'00')
+    core.wait(0.2)
+    p_port.write(b'RR')
+
+# Trigger keys
+
+tg_mblock =  '07'
+tg_mtrial = '01'
+tg_stim = '13'
+tg_resp = '05'
+tg_zero = '00'
 #prefs.hardware['audioLib']=['pyo'] # use Pyo audiolib for good temporal resolution
 #from psychopy.sound import Sound # This should be placed after changing the audio library
 # monitors.getAllMonitors()
@@ -48,22 +63,19 @@ monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = False
+monitor_features['full']  = True
 monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
 win, monitor_features = exp.create_window(monitor_features)
 ifi = monitor_features['ifi']
 
-expInfo['monitor_features'] = monitor_features
-
-
 # Experiment timings and characteristics 
 stim = st.stim_config(ifi) #Loading stim characteristics
 
-expInfo['stim'] = stim # saving
+
       
-basic_stim = st.draw_basic(win,expInfo['stim'])
+basic_stim = st.draw_basic(win,stim)
 
 # Create the sounds that I am going to use
 #lowf_s = Sound(600, sampleRate=44100, secs=0.1, stereo=True ,loops=0,hamming=True)
@@ -107,22 +119,28 @@ ExpClockStart = Clock.getTime() # global experiment time
 guess = expInfo['subjInfo']['guess']
 black_resps = np.array([[-1, -1, -1],[-1, -1, -1]]) # default color resp options
 
-stepsize = [0.3/3] # according to paper is SDT
+stepsize =  [0.3/3] # according to paper is SDT - other options [0.15, 0.1, 0.1, 0.05, 0.05] #
 
 staircase = data.StairHandler(startVal = guess,
-                          stepType = 'lin', stepSizes=np.array(stepsize), # this determines the number of reversals and therefore the number of trials
+                          stepType = 'lin', stepSizes=stepsize, # this determines the number of reversals and therefore the number of trials
                           nUp=1, nDown=2,  # will home in on the 80% threshold
-                          minVal = 0, maxVal = 0.6,
+                          minVal = 0.01, maxVal = 0.6,
                           nTrials= 1000) # 40
 
 main_exp  = {}
-main_exp['nblocks']     = 6 # 4 # totaltime = 90 * 6 * 5
+main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
 main_exp['trial_reps']  = 40 
 
 
 for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     instr.block_start(win)
+    # lets trigger the beggining of the experiment
+    if sst: win.callOnFlip(p_port.write, tg_mblock.encode())
+    win.flip()
+    if sst: win.callOnFlip(p_port.write, tg_zero.encode())
+    win.flip()
+    
     BlockClockStart = Clock.getTime() # block experiment time
     block = {} # dummy variable to save block data
     correct_seq = np.array([]) # saving seq. of correct responses per trial sequence
@@ -182,6 +200,10 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 st.fixation(win, basic_stim)
                # st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                 st.draw_contour(win,basic_stim)
+                if i_si == 0:     
+                    if sst: win.callOnFlip(p_port.write, tg_mtrial.encode()) # send trigger
+                if i_si == 1:     
+                    if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
                 t = win.flip()
                 if (i_si ==0): trial_times = np.append(trial_times, t)
         
@@ -189,17 +211,26 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
         
             # Draw the stimuli
             for istim in range(stim['nstim']+2): # 2 stim for the masks sandwiching
+                if i_si == 0:     
+                    if sst: win.callOnFlip(p_port.write, tg_stim.encode()) # send trigger
+                if i_si == 1:     
+                    if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
                 event.clearEvents()
-                if (istim == 0) | (istim == stim['nstim']+1):
+                if (istim == 0) | (istim == stim['nstim']+1): # if first or last mask
                    for frame in range(stim['stim_frames']):  # drawing stim frames
-                        if frame < stim['stim_frames'] - 1:  # the last frame should be empty
+                        if (frame == stim['stim_frames']) and (istim == 0):  # the last frame should be emptyin the first mask
+                           # -1 and istim == 0
+                            st.fixation(win, basic_stim)
+                            st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                            st.draw_contour(win,basic_stim)
+                            t = win.flip()                    
+                        else: # flip empty frame
                             st.draw_mask(win, basic_stim)
                             st.fixation(win, basic_stim)
-                         #   st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                            st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                             st.draw_contour(win,basic_stim)
                             t = win.flip()
-                            if (frame ==0): trial_times = np.append(trial_times, t)
-                            respClockStart = Clock.getTime()
+                        if (frame ==0): trial_times = np.append(trial_times, t)
                 else:
                     basic_stim['grating'].ori =  np.rad2deg(t_orient[istim-1]) # change orientation for each stim
                     basic_stim['grating'].phase = np.random.rand()
@@ -208,20 +239,23 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                         if frame < stim['stim_frames'] - 1:  # the last frame should be empty
                             basic_stim['grating'].draw()
                             st.fixation(win, basic_stim)
-                          #  st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                            st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                             st.draw_contour(win,basic_stim)
                             t = win.flip()
                             if (frame ==0): trial_times = np.append(trial_times, t)
-                  #  st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)       
-                    st.draw_contour(win,basic_stim)
-                    st.fixation(win, basic_stim)
-                    t = win.flip()                  
-                                   
+                        else: # flip empty frame
+                            st.fixation(win, basic_stim)
+                            st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                            st.draw_contour(win,basic_stim)
+                            t = win.flip()               
+            
+            respClockStart = Clock.getTime()                       
             st.draw_mask(win, basic_stim)
             st.fixation(win, basic_stim)
             st.draw_contour(win,basic_stim)
             st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)     
             t = win.flip()
+            trial_times = np.append(trial_times, t)
                            
             # Get responses
             while thisResp == None:
@@ -236,8 +270,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 
             elif thisResp[1] == 'm':
                 resp_ang = expInfo['resp_maps'][1]
-                
-                
+
             if (x > 0 and resp_ang == 45) or (x < 0 and  resp_ang == 0):
                 correct = 1  # correct
                 print("correct")
@@ -245,21 +278,34 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                     steps = staircase.stepSizes # change stepsize as suggested in Miguel Angel Perez paper
                     steps = np.array(steps)
                     staircase.stepSizes = 0.871*steps
+                    
             else:
                 print("incorrect")
                 correct = -1  # incorrect
             trial_perform = np.append(trial_perform, correct) 
             
+                
+            for i_si in range(stim['wait_feedback_frames']): # wait time for feedback and send a couple of triggers
+                if sst:
+                    if i_si == 0: win.callOnFlip(p_port.write, tg_resp.encode()) # send trigger
+                    if i_si == 1: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins           
+                basic_stim['fixation_point'].draw()
+                st.draw_contour(win,basic_stim)
+                t = win.flip()
+                if (i_si ==0): trial_times = np.append(trial_times, t)
+                
+              
+            basic_stim['fixation_point'].draw()
+            st.draw_contour(win,basic_stim)
+            win.flip()   
+            #print(correct)
             print(trial_perform)
             if i_rep == 0: staircase.addResponse(correct) # adding information to staircase
             if i_rep == 2:
-                for i_si in range(stim['feedback_frames']): 
+                for i_si in range(stim['feedback_frames']): # time added between trials
                     st.draw_mask(win, basic_stim)
                     st.fixation(win, basic_stim)
-                    #if correct == 1:
-                    #     basic_stim['fixation_point'].color = [-1, 1, -1] # colors are expressed as deviation from grey red -> [1,-1,-1]
-                    #else:
-                    #     basic_stim['fixation_point'].color = [1, -1, -1]
+
                     if trial_perform[0] == 1:
                         basic_stim['feedback1'].color = [0.0, 1.0, 0.0]
                     else:
@@ -289,7 +335,13 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
             
             trial_times = np.array(trial_times) 
             trialClocktimes = np.vstack([trialClocktimes, trial_times]) if trialClocktimes.size else trial_times  
-            
+            # if there is an outlier trial, stop experiment
+            this_times = np.diff(trial_times)
+            mean_stim_time = np.mean(this_times[4:8]) * 1000
+            if mean_stim_time > stim['stim_time'] + 75 or mean_stim_time < stim['stim_time'] - 75:
+                print('Bad timing!! Cerrando programa')
+                win.close()
+                core.quit
             # Storing data in variables           
             thr_trials_var.append([subj_id, thisBlock , iTrial, i_rep, cond, x, thisResp[1], expInfo['resp_maps'][0], correct, rt_deci])# saving conditions here
             thr_trials_ori.append(t_orient.tolist())
@@ -300,12 +352,21 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     headers =  thr_trials_ori.pop(0)
     block['trial_orientations'] = DataFrame(thr_trials_ori , columns=headers)
     block['block_duration'] =  Clock.getTime() -  BlockClockStart
+    
+    main_frame_log = {}
+    main_frame_log['droppedframes'] = win.nDroppedFrames
+    main_frame_log['timings'] = np.diff(trialClocktimes,axis = 1)
+    block['main_frame_log'] = main_frame_log 
+    
     main_exp['Exp_blocks'][thisBlock] =  block  # saving block data
     toFile(resultspath, expInfo) #saving file to disk
             #trialClocktimes.append(trial_times)
         # Get datafiles in pandas format and attack to main Exp.variable
 
 approxThreshold = np.average(staircase.reversalIntensities[-5:])
+
+main_exp['monitor_features'] = monitor_features
+main_exp['stim'] = stim
 
 expInfo['subjInfo']['guess'] = approxThreshold  # save threshold for next experiment
 
@@ -314,10 +375,6 @@ headers =  thr_trials_ori.pop(0)
 expInfo['main_exp'] =  main_exp
 
 print('Overall, %i frames were dropped.' % win.nDroppedFrames)
-main_frame_log = {}
-main_frame_log['droppedframes'] = win.nDroppedFrames
-main_frame_log['timings'] = np.diff(trialClocktimes,axis = 1)
-expInfo['main_frame_log'] =  main_frame_log 
 
 
 toFile(resultspath, expInfo) #saving file to disk

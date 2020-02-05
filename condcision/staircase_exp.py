@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Alexis Perez-Bellido
+# Code for the confirmation bias experiment (using predcision code)
 
-# exec(open('staircase_exp.py').read())
-version = 1.3
+
+version = 1.1
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
@@ -40,7 +41,7 @@ subj_id = expInfo['subjInfo']['observer']
 # Loading monitor definitions
 monitores = st.monitor_def() 
 
-mon, expInfo['monitor'] = exp.define_monitor(monitores[3]) # select the correct monitor
+mon, expInfo['monitor'] = exp.define_monitor(monitores[1]) # select the correct monitor
 
 # Creating a new experimental window
 monitor_features = {}
@@ -73,8 +74,7 @@ basic_stim = st.draw_basic(win,expInfo['stim'])
 # Experimental condition preparation
 # response mapping (shuffled in each experiment )
 expInfo['resp_maps']  = np.array([0, 45]) # 0 -> cardinal; 45 -> diagonal
-np.random.shuffle(expInfo['resp_maps']) # first response option (cardignal or diagonal) will be placed at left, and second at right 
- 
+
 
 # set path of stim file. Load the oriented trials dataset
 stimfile = os.path.join(os.getcwd(),'stim_matrix') # os.sep
@@ -114,12 +114,11 @@ staircase = data.StairHandler(startVal = guess,
                           stepType = 'lin', stepSizes=np.array(stepsize), # this determines the number of reversals and therefore the number of trials
                           nUp=1, nDown=2,  # will home in on the 80% threshold
                           minVal = 0, maxVal = 0.6,
-                          nTrials= 30)
+                          nTrials= 20)
 
 
-
-thr_trials_var = [['subj','cond', 'DV', 'resp', 'correct', 'RT']] # saving conditions here
-thr_trials_ori = [['o1','o2','o3','o4','o5','o6','o7','o8']]
+thr_trials_var = [['subj','cond', 'DV', 'resp', 'r_map', 'correct', 'RT']] # saving conditions here
+thr_trials_ori = [['o1','o2','o3','o4','o5','o6']]
 trialClocktimes = np.array([]) # saving whole times here
 
     
@@ -142,8 +141,10 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
     thisResp=None
     col_resp = [1, 1, 1]
     trialClockStart = Clock.getTime()
-
-    stim['ISI1_frames'] = round(np.random.randint(650,850)/ifi)
+  
+    np.random.shuffle(expInfo['resp_maps']) # Shuffling resp_map -> first response option (cardignal or diagonal) will be placed at left, and second at right
+    
+    stim['ISI1_frames'] = round(np.random.randint(400,700)/ifi)  # fixation alone
     for i_si in range(stim['ISI1_frames']): # first period before the first beep
         st.fixation(win, basic_stim)
         t = win.flip()
@@ -153,27 +154,12 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
 
     for i_si in range(stim['ISI2_frames']): # second period before the second beep
         st.fixation(win, basic_stim)
-        st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+       # st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
         st.draw_contour(win,basic_stim)
         t = win.flip()
         if (i_si ==0): trial_times = np.append(trial_times, t)
 
     # medf_s.play() # reproduce 2nd auditory cue (here it is always the same)
-    
-    for i_si in range(stim['ISI3_frames']): # second period before the contour
-        st.fixation(win, basic_stim)
-        st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
-        st.draw_contour(win,basic_stim)
-        t = win.flip()
-        if (i_si ==0): trial_times = np.append(trial_times, t)
-        
-
-    for i_si in range(stim['ISI4_frames']): # second period before the trial starts (response mapping cues)
-        st.fixation(win, basic_stim)
-        st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)  
-        st.draw_contour(win,basic_stim)
-        t = win.flip()
-        if (i_si ==0): trial_times = np.append(trial_times, t)
 
     # Draw the stimuli
     for istim in range(stim['nstim']+2): # 2 stim for the masks sandwiching
@@ -183,7 +169,7 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
                 if frame < stim['stim_frames'] - 1:  # the last frame should be empty
                     st.draw_mask(win, basic_stim)
                     st.fixation(win, basic_stim)
-                    st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                 #   st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                     st.draw_contour(win,basic_stim)
                     t = win.flip()
                     if (frame ==0): trial_times = np.append(trial_times, t)
@@ -196,11 +182,11 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
                 if frame < stim['stim_frames'] - 1:  # the last frame should be empty
                     basic_stim['grating'].draw()
                     st.fixation(win, basic_stim)
-                    st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                  #  st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                     st.draw_contour(win,basic_stim)
                     t = win.flip()
                     if (frame ==0): trial_times = np.append(trial_times, t)
-            st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)       
+          #  st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)       
             st.draw_contour(win,basic_stim)
             st.fixation(win, basic_stim)
             t = win.flip()
@@ -215,13 +201,13 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
        
     # Get responses
     while thisResp == None:
-            thisResp = exp.getResponse(win, ["c", "m"], Clock) # you have to pass a clock function
+            thisResp = exp.getResponse(win, ["z", "m"], Clock) # you have to pass a clock function
 
     rt_deci = thisResp[0] -  respClockStart
     rt_deci = np.around(rt_deci, decimals = 3)
     print(rt_deci) # you can make a function of this to assign the correctness
     
-    if thisResp[1] == 'c':
+    if thisResp[1] == 'z':
         resp_ang = expInfo['resp_maps'][0] # assign response selected
         
     elif thisResp[1] == 'm':
@@ -240,7 +226,7 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
      
     staircase.addResponse(correct) # adding information to staircase
 
-    for i_si in range(stim['feedback_frames']): # second period before the trial starts (response mapping cues)
+    for i_si in range(stim['feedback_quest_frames']): # second period before the trial starts (response mapping cues)
         st.draw_mask(win, basic_stim)
         st.fixation(win, basic_stim)
         if correct == 1:
@@ -260,7 +246,7 @@ for thisIncrement in staircase:  # will continue the staircase until it terminat
     
     # Storing data in variables
     
-    thr_trials_var.append([subj_id, cond, x, thisResp[1], correct, rt_deci])# saving conditions here
+    thr_trials_var.append([subj_id, cond, x, thisResp[1], expInfo['resp_maps'][0], correct, rt_deci])# saving conditions here
     thr_trials_ori.append(t_orient.tolist())
     #trialClocktimes.append(trial_times)
 # Get datafiles in pandas format and attack to main Exp.variable

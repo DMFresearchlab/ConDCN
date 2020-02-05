@@ -15,7 +15,7 @@ import numpy as np
 
 def stcexp_subject_info(version): # creating staircase subject data
     expInfo = {}
-    subjInfo = {'observer':'test', 'ExpVersion': version, 'guess':0.5, 'gender (M/F)': '?', 'age': 0, 'hand (L/R)': '?'}    
+    subjInfo = {'observer':'test', 'ExpVersion': version, 'guess':0.4, 'gender (M/F)': '?', 'age': 0, 'hand (L/R)': '?'}    
     # present a dialogue to change params
     
     sdataDlg = gui.DlgFromDict(subjInfo, title='Orientation decisions: Threshold estimation', fixed=['ExpVersion'], order = [ 'ExpVersion', 'observer', 'guess' ]) # fixed=['dateStr']    
@@ -92,7 +92,7 @@ def mainexp_subject_info(version): # loading staircase subject data
             # lets create a subject from the scractch.
             expInfo = {}
             expInfo['maindateStr'] = data.getDateStr()
-            subjInfo = {'observer':subj_id, 'ExpVersion': version, 'guess':0.2, 'gender (M/F)': '?', 'age': 0, 'hand (L/R)': '?'}    
+            subjInfo = {'observer':subj_id, 'ExpVersion': version, 'guess':0.4, 'gender (M/F)': '?', 'age': 0, 'hand (L/R)': '?'}    
             # present a dialogue to change params            
             gui.DlgFromDict(subjInfo, title='Orientation decisions: Threshold estimation', fixed=['ExpVersion'], order = [ 'ExpVersion', 'observer', 'guess' ]) # fixed=['dateStr']    
                
@@ -128,7 +128,7 @@ def locexp_subject_info(version): # loading staircase subject data
         # present a dialogue to change params    
         sdataDlg= gui.DlgFromDict(expInfo['subjInfo'], title='Orientation decisions: Functional localizer', fixed=['ExpVersion'], order = [ 'ExpVersion', 'observer' ]) # fixed=['dateStr']    
         
-        if expInfo.get('locInfo') == None:
+        if None == expInfo.get('locInfo'):
             # creating a simplistic dictionary with the subject data
             locInfo = dict(expInfo['subjInfo'])
             del locInfo['guess']
@@ -137,17 +137,16 @@ def locexp_subject_info(version): # loading staircase subject data
             del locInfo['hand (L/R)']
             locInfo['block'] = 0
             expInfo['locInfo'] = locInfo
-          
         else:
             expInfo['locInfo']['block']  = expInfo['locInfo']['block'] + 1 # Move to the next block       
         
-        sdataDlg= gui.DlgFromDict(expInfo['locInfo'], title='Functional localizer', fixed=['ExpVersion'],order = [ 'ExpVersion', 'observer', 'block' ]) # fixed=['dateStr']    
+        sdataDlg= gui.DlgFromDict(locInfo, title='Functional localizer', fixed=['ExpVersion'],order = [ 'ExpVersion', 'observer', 'block' ]) # fixed=['dateStr']    
            
         if not sdataDlg.OK:
             sys.exit('Experiment cancelled by the participant')
             core.quit
             
-        #expInfo['maindateStr'] = data.getDateStr() 
+        expInfo['maindateStr'] = data.getDateStr() 
             
     except:  # if not there then use a default set
         
@@ -168,7 +167,7 @@ def locexp_subject_info(version): # loading staircase subject data
             fileName = subjInfo['observer']
             fileName = fileName+'.psydat' # the extension is required in order to be read by pyshcophy wrapper function "fromFile"
             expInfo['subjInfo'] = subjInfo   
-    
+                            
             if None == expInfo.get('locInfo'):
                 # creating a simplistic dictionary with the subject data
                 locInfo = dict(expInfo['subjInfo'])
