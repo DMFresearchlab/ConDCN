@@ -11,7 +11,7 @@ Lets code a functional localizer task
 # Alexis Perez-Bellido
 
 # exec(open('staircase_exp.py').read())
-version = 1.1
+version = 1.3
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
@@ -21,6 +21,7 @@ import os, sys
 import exp_func as exp
 import stimuli as st
 import instructions as instr
+import serial
 
 
 from psychopy import visual, logging, core, event,  gui, data
@@ -38,17 +39,29 @@ event.globalKeys.add(key='q', modifiers=['ctrl'], func=core.quit)
 prefs.hardware['audioLib']=['pyo'] # use Pyo audiolib for good temporal resolution
 from psychopy.sound import Sound # This should be placed after changing the audio library
 
+sst = False  # Using parallel port to send triggers
 # monitors.getAllMonitors()
 #from general_settings import * # reads the variables in one script
 
+if sst: 
+    p_port = serial.Serial('COM3', 115200, timeout = 0) # this is for windows
+    p_port.write(b'00')
+    core.wait(0.2)
+    p_port.write(b'RR')
+
+tg_lblock = '10'
+tg_ltrial = '15'
+tg_stim = '17'
+tg_zero = '00'
+    
 # Collect subject data
-expInfo, resultspath = exp.stcexp_subject_info(version)
+expInfo, resultspath = exp.locexp_subject_info(version)
 subj_id = expInfo['subjInfo']['observer']
 
 # Loading monitor definitions
 monitores = st.monitor_def() 
 
-mon, expInfo['monitor'] = exp.define_monitor(monitores[1]) # select the correct monitor
+mon, expInfo['monitor'] = exp.define_monitor(monitores[3]) # select the correct monitor
 
 # Creating a new experimental window
 monitor_features = {}
@@ -56,7 +69,7 @@ monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
 monitor_features['full']  = True
-monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
+monitor_features['Hz'] = 60 #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
 win, monitor_features = exp.create_window(monitor_features)
@@ -95,11 +108,20 @@ ExpClockStart = Clock.getTime() # global experiment time
 
 black_resps = np.array([[-1, -1, -1],[-1, -1, -1]]) # default color resp options
 
+thisBlock = expInfo['locInfo']['block'] # block number...
 
 loc_exp  = {}
-loc_exp['nblocks']     = 6 # 6 possible blocks (we will only run 2 in theory)
-loc_exp['trial_reps']  = 9 # 1 # 1 bloque de 1 repeticion son 90 s aprox. 5
-loc_exp['Exp_blocks']  = [None] * loc_exp['nblocks'] # assigning memory for storing block data
+loc_exp['trial_reps']  = 1 # 4 # 1 bloque de 1 repeticion son 57 s 
+
+loc_exp['nblocks'] = 2 # This is defined at the begining of the experiment 2 possible blocks (we will only run 2 in theory)
+
+# in first block create the memory to save blocks info
+if thisBlock == 0:
+    loc_exp['Exp_blocks'] = [None] * loc_exp['nblocks']  # create a new loc_exp variable
+else:
+    loc_exp['Exp_blocks'] = expInfo['loc_exp']['Exp_blocks'] # loading previous loc_exp
+    
+#loc_exp['Exp_blocks']  = [None] * loc_exp['nblocks'] # assigning memory for storing block data
 
 
 # Experiment design
@@ -141,9 +163,15 @@ orientation_var_std = stats.circstd((orientations), axis=1)
 trialClocktimes = np.array([]) # saving whole times here
 
 #win.getMovieFrame()  
+# lets trigger the beggining of the experiment
 
+if sst: win.callOnFlip(p_port.write, tg_lblock.encode())
+win.flip()
+if sst: win.callOnFlip(p_port.write, tg_zero.encode())
+win.flip()
+    
 for thisTrial in trials: # iterate over trials
-     
+
     trial_times = np.array([]) # logging trial event time stamps
     basic_stim['fixation_point'].color = [1, 1, 1]
     ExpClockTrial = Clock.getTime()
@@ -160,11 +188,12 @@ for thisTrial in trials: # iterate over trials
     resp = None
     col_resp = [1, 1, 1]
     trialClockStart = Clock.getTime()
-    t_orient = orientations[ trials.thisN, ]
+    t_orient = orientations[ trials.thisN ]
+    stim['ISI1_frames'] = round(np.random.randint(650,850)/ifi)
     for i_si in range(stim['ISI1_frames']): # first period before the first beep
         st.fixation(win, basic_stim)
         t = win.flip()
-        if (i_si ==0): trial_times = np.append(trial_times, t)
+        if (i_si == 0): trial_times = np.append(trial_times, t)
 
     medf_s.play() # reproduce 1st auditory cue
 
@@ -178,6 +207,10 @@ for thisTrial in trials: # iterate over trials
     medf_s.play() # reproduce 2nd auditory cue (here it is always the same)
     
     for i_si in range(stim['ISI3_frames']): # second period before the contour
+        if i_si == 0:     
+            if sst: win.callOnFlip(p_port.write, tg_ltrial.encode()) # send trigger
+        if i_si == 1:     
+            if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins         
         st.fixation(win, basic_stim)
         #st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
         st.draw_contour(win,basic_stim)
@@ -194,17 +227,27 @@ for thisTrial in trials: # iterate over trials
 
     # Draw the stimuli
     for istim in range(stim['nstim']+2): # 2 stim for the masks sandwiching
+        if i_si == 0:     
+            if sst: win.callOnFlip(p_port.write, tg_stim.encode()) # send trigger
+        if i_si == 1:     
+            if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
         event.clearEvents()
         if (istim == 0) | (istim == stim['nstim']+1):
            for frame in range(stim['stim_frames']):  # drawing stim frames
-                if frame < stim['stim_frames'] - 1:  # the last frame should be empty
-                    st.draw_mask(win, basic_stim)
+                if (frame == stim['stim_frames']) and (istim == 0):  # the last frame should be emptyin the first mask
+                   # -1 and istim == 0
                     st.fixation(win, basic_stim)
                    # st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                     st.draw_contour(win,basic_stim)
+                    t = win.flip()                    
+                else: # flip empty frame
+                    st.draw_mask(win, basic_stim)
+                    st.fixation(win, basic_stim)
+                    #st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                    st.draw_contour(win,basic_stim)
                     t = win.flip()
-                    if (frame ==0): trial_times = np.append(trial_times, t)
-                    respClockStart = Clock.getTime()
+                if (frame ==0): trial_times = np.append(trial_times, t)
+                
         else:            
             basic_stim['grating'].ori =  np.rad2deg(t_orient[istim-1]) # change orientation for each stim
             basic_stim['grating'].phase = np.random.rand()
@@ -221,17 +264,19 @@ for thisTrial in trials: # iterate over trials
                     st.draw_contour(win,basic_stim)
                     t = win.flip()
                     if (frame ==0): trial_times = np.append(trial_times, t)
-                        
-            #st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)       
-            st.draw_contour(win,basic_stim)
-            st.fixation(win, basic_stim)
-            t = win.flip()
-                                      
+                else: # flip empty frame
+                    st.fixation(win, basic_stim)
+                    st.draw_contour(win,basic_stim)
+                    t = win.flip()
+    
+     
+    respClockStart = Clock.getTime()                                  
     st.draw_mask(win, basic_stim)
     st.fixation(win, basic_stim)
     st.draw_contour(win,basic_stim)
     #st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)     
     t = win.flip()
+    trial_times = np.append(trial_times, t)
           
     # Get responses stim['ITI_frames'] 
     for i_si in range(stim['ITI_frames']): # 
@@ -275,6 +320,13 @@ for thisTrial in trials: # iterate over trials
     
     trial_times = np.array(trial_times ) 
     trialClocktimes = np.vstack([trialClocktimes, trial_times]) if trialClocktimes.size else trial_times  
+    this_times = np.diff(trial_times)
+    # if there is an outlier trial, stop experiment
+    mean_stim_time = np.mean(this_times[4:14]) * 1000
+    if mean_stim_time > stim['stim_time'] + 75 or mean_stim_time < stim['stim_time'] - 75:
+        print('Bad timing!! Cerrando programa')
+        win.close()
+        core.quit
     
     # Storing data in variables
     
@@ -284,6 +336,10 @@ for thisTrial in trials: # iterate over trials
 # Get datafiles in pandas format and attack to main Exp.variable
 
 
+main_frame_log = {}
+main_frame_log['droppedframes'] = win.nDroppedFrames
+main_frame_log['timings'] = np.diff(trialClocktimes,axis = 1)
+block['main_frame_log'] = main_frame_log 
 
 headers =  thr_trials_ori.pop(0)
 block['trial_orientations'] = DataFrame(thr_trials_ori , columns=headers)
@@ -291,24 +347,25 @@ block['trial_orientations'] = DataFrame(thr_trials_ori , columns=headers)
 headers =  thr_trials_var.pop(0)
 block['data'] = DataFrame(thr_trials_var , columns=headers)
 block['block_duration'] =  Clock.getTime() -  BlockClockStart
-
+block['BlockClockStart'] = BlockClockStart
 
 # Saving block data
-thisBlock = expInfo['locInfo']['block']
 
 loc_exp['Exp_blocks'][thisBlock] =  block  # saving block data
 expInfo['loc_exp'] =  loc_exp
 
+#expInfo['loc_exp'][0] =  block 
 
 print('Overall, %i frames were dropped.' % win.nDroppedFrames)
-loc_frame_log = {}
-loc_frame_log['droppedframes'] = win.nDroppedFrames
-loc_frame_log['timings'] = np.diff(trialClocktimes,axis = 1)
-expInfo['loc_frame_log'] =  loc_frame_log 
+
+loc_exp['monitor_features'] = monitor_features
+loc_exp['stim'] = stim
 
 # closing everything
 instr.end_experiment(win)
 win.close()
+
+if sst: p_port.close()
 # data saved
 toFile(resultspath, expInfo) #saving file to disk
 

@@ -1,25 +1,28 @@
 from psychopy import visual
 import numpy as np
 #import orient_decision.win
- 
+
+
+    
+    
 def stim_config(ifi):
     # Experiment timings design
     stim = {}
-    stim['nreps'] = 3 # number of gratings per sequence
-    stim['nstim'] = 6 # number of gratings per sequence
+    stim['nstim'] = 8 # number of gratings per sequence
     stim['ntrials_per_cond'] = 1 # number of repetitions per trial type
     stim['stim_time'] = 250 # in miliseconds
     stim['stim_frames'] = round(stim['stim_time']/ifi)
-    # stim['ISI1_frames'] IS determined randomly in each trial
-    stim['ISI2_frames'] = round(750/ifi) # fixation  + circle + resp_options
-    stim['feedback_frames'] = round(750/ifi) # 
-    stim['feedback_quest_frames'] = round(200/ifi) 
+    stim['ISI1_frames'] = round(750/ifi)  # fixation alone
+    stim['ISI2_frames'] = round(250/ifi) # fixation  + circle + resp_options
+    stim['ISI3_frames'] = round(100/ifi) # fixation  + circle + resp_options + V cue
+    stim['ISI4_frames'] = round(500/ifi) ## fixation  + circle + resp_options 
+    stim['feedback_frames'] = round(200/ifi) # 
        
         # Create all the stimuli
     # Stimuli parameters
     stim['size_stim'] = 14 # degs # este es el lado del cuadrado del grating
     stim['grating_contrast'] = 0.5
-    stim['SF'] = 2
+    stim['SF'] = 1
 
     return stim
 
@@ -51,10 +54,7 @@ def draw_basic(win, stim): # creates a dictionary with basic stimulus features
     # Response options Diagonal or Cardinal
     basic_stim['circle'] = visual.Circle(win=win,lineWidth = 10, units="deg", radius=2, lineColor=[1, 1, 1],edges=64)
     basic_stim['linev'] = visual.Line(win=win,lineWidth = 10,units="deg",lineColor=[1, 1, 1],start = [0, -2],end = [0, 2])
-    basic_stim['lineh'] = visual.Line(win=win,lineWidth = 10,units="deg",lineColor=[1, 1, 1],start = [-2, 0],end = [2, 0])
-    basic_stim['feedback1'] = visual.Circle(win=win,units="deg", radius=1, edges=64, color = [0.5, 0.5, 0.5], pos = [-4, -10])
-    basic_stim['feedback2'] = visual.Circle(win=win,units="deg", radius=1, edges=64, color = [0.5, 0.5, 0.5], pos = [0, -10])
-    basic_stim['feedback3'] = visual.Circle(win=win,units="deg", radius=1, edges=64, color = [0.5, 0.5, 0.5], pos = [4, -10])
+    basic_stim['lineh'] = visual.Line(win=win,lineWidth = 10,units="deg",lineColor=[1, 1, 1],start = [-2, 0],end = [2, 0],)
     return basic_stim
 
 
@@ -117,7 +117,13 @@ def monitor_def():
     monitor_def3['monitor_width'] = 60
     monitor_def3['distance2monitor'] = 40
     
-    monitors = [monitor_def1, monitor_def2, monitor_def3]
+    monitor_def4 = {}
+    monitor_def4['monitor_name'] = 'dell_xps13' # monitor to use (make sure to define monitors in exp_monitors center.
+    monitor_def4['monitor_pixels']  = (3200,1800)
+    monitor_def4['monitor_width'] = 30
+    monitor_def4['distance2monitor'] = 50
+    
+    monitors = [monitor_def1, monitor_def2, monitor_def3 , monitor_def4]
     return monitors
         
         

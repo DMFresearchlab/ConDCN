@@ -12,7 +12,7 @@ def init_instructions(win, basic_stim, ifi):
       
     inst = visual.TextStim(win, pos = [0,0])
     inst.wrapWidth = 20
-    inst.text = "En cada trial te presentaré una sequencia rápida de 6 estimulos con diferentes orientaciones... "
+    inst.text = "En cada trial te presentaré una sequencia rápida de 8 estimulos con diferentes orientaciones... "
     inst.height = 0.7
     nextt = visual.TextStim(win, pos = [0,-6])
     nextt.wrapWidth = 20
@@ -41,10 +41,10 @@ def init_instructions(win, basic_stim, ifi):
     basic_stim['lineh'].pos = np.array([6, 5])
     basic_stim['linev'].pos = np.array([6, 5])
     basic_stim['circle'].pos = np.array([6, 5])
-    #basic_stim['linev'].lineColor = np.array([-1,-1,-1])
+    #basic_stim['linev'].lineColor = np.array([-1,-1,-1])s
     
     inst.text = "Tu tarea consiste en estimar si la orientación media de los estimulos presentados está más cerca de los ejes cardinales (vertical u horizonal)\
-    pulsando la tecla ESPACIALMENTE congruente con el símbolo cardinal... ('z' izquierda, 'm' derecha)"
+    pulsando la tecla ESPACIALMENTE congruente con el símbolo cardinal... (izquierda o derecha)"
     basic_stim['lineh'].ori = 0
     basic_stim['linev'].ori = 0
     
@@ -160,7 +160,8 @@ def main_instructions(win):
     inst = visual.TextStim(win, pos = [0,0])
     inst.wrapWidth = 20
     inst.text = "Empezamos el experimento. Seguimos con la misma tarea que antes\
-    con la diferencia de que ahora te repetiré tres veces cada secuencia de estímulos y tendrás tres oportunidades de hacerlo bien"
+    aunque ahora los símbolos de respuesta de los laterales se iluminarán al principio de cada trial\
+    indicando que opción es ligeramente más probable."
     inst.height = 0.7
     nextt = visual.TextStim(win, pos = [0,-6])
     nextt.wrapWidth = 20
@@ -172,8 +173,9 @@ def main_instructions(win):
     win.flip()
     event.waitKeys(keyList = ["space"])
     
-    inst.text = "Cuantos mas puntos verdes consigas durante el experimento,\
-    más dinero ganarás"
+    inst.text = "Al final de cada bloque habrá un sorteo\
+    en el que puedes ganar puntos. Cuantos mas trials correctos hagas durante el experimento,\
+    más probabilidades de ganar en el sorteo"
     inst.draw()
     nextt.draw()
     win.flip()
