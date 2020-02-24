@@ -56,14 +56,14 @@ subj_id = expInfo['subjInfo']['observer']
 # Loading monitor definitions
 monitores = st.monitor_def() 
 
-mon, expInfo['monitor'] = exp.define_monitor(monitores[1]) # select the correct monitor
+mon, expInfo['monitor'] = exp.define_monitor(monitores[4]) # select the correct monitor
 
 # Creating a new experimental window
 monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = True
+monitor_features['full'] = True
 monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
@@ -131,6 +131,8 @@ main_exp  = {}
 main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
 main_exp['trial_reps']  = 40 
+   
+
 
 
 for thisBlock in range(main_exp['nblocks']): # iterate over blocks
@@ -192,7 +194,9 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                      
                 t = win.flip()
                 
-                if (i_si ==0): trial_times = np.append(trial_times, t)
+                if (i_si ==0):
+                    basic_stim['white_test'].draw()  
+                    trial_times = np.append(trial_times, t)
         
             # medf_s.play() # reproduce 1st auditory cue
         
@@ -200,7 +204,8 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 st.fixation(win, basic_stim)
                # st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                 st.draw_contour(win,basic_stim)
-                if i_si == 0:     
+                if i_si == 0:
+                    basic_stim['white_test'].draw()  
                     if sst: win.callOnFlip(p_port.write, tg_mtrial.encode()) # send trigger
                 if i_si == 1:     
                     if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
@@ -211,13 +216,13 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
         
             # Draw the stimuli
             for istim in range(stim['nstim']+2): # 2 stim for the masks sandwiching
-                if i_si == 0:     
-                    if sst: win.callOnFlip(p_port.write, tg_stim.encode()) # send trigger
-                if i_si == 1:     
-                    if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
                 event.clearEvents()
                 if (istim == 0) | (istim == stim['nstim']+1): # if first or last mask
                    for frame in range(stim['stim_frames']):  # drawing stim frames
+                        if frame == 0:
+                            if sst: win.callOnFlip(p_port.write, tg_stim.encode()) # send trigger
+                        if frame == 1:     
+                            if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
                         if (frame == stim['stim_frames']) and (istim == 0):  # the last frame should be emptyin the first mask
                            # -1 and istim == 0
                             st.fixation(win, basic_stim)
@@ -229,24 +234,38 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                             st.fixation(win, basic_stim)
                             st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                             st.draw_contour(win,basic_stim)
+                            if frame == 0:
+                                basic_stim['white_test'].draw()  
                             t = win.flip()
-                        if (frame ==0): trial_times = np.append(trial_times, t)
+                        if (frame ==0): 
+                            
+                            trial_times = np.append(trial_times, t)
                 else:
                     basic_stim['grating'].ori =  np.rad2deg(t_orient[istim-1]) # change orientation for each stim
                     basic_stim['grating'].phase = np.random.rand()
         
                     for frame in range(stim['stim_frames']): # drawing stim frames
+                        if frame == 0:
+                            if sst: win.callOnFlip(p_port.write, tg_stim.encode()) # send trigger
+                        if frame == 1:     
+                            if sst: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins  
                         if frame < stim['stim_frames'] - 1:  # the last frame should be empty
                             basic_stim['grating'].draw()
                             st.fixation(win, basic_stim)
                             st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                             st.draw_contour(win,basic_stim)
+                            if frame == 0:
+                                basic_stim['white_test'].draw()  
                             t = win.flip()
-                            if (frame ==0): trial_times = np.append(trial_times, t)
+                            if (frame ==0): 
+                                basic_stim['white_test'].draw()  
+                                trial_times = np.append(trial_times, t)
                         else: # flip empty frame
                             st.fixation(win, basic_stim)
                             st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
                             st.draw_contour(win,basic_stim)
+                            if frame == 0:
+                                basic_stim['white_test'].draw()  
                             t = win.flip()               
             
             respClockStart = Clock.getTime()                       
@@ -287,7 +306,9 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 
             for i_si in range(stim['wait_feedback_frames']): # wait time for feedback and send a couple of triggers
                 if sst:
-                    if i_si == 0: win.callOnFlip(p_port.write, tg_resp.encode()) # send trigger
+                    if i_si == 0: 
+                        win.callOnFlip(p_port.write, tg_resp.encode()) # send trigger
+                        basic_stim['white_test'].draw()  
                     if i_si == 1: win.callOnFlip(p_port.write, tg_zero.encode()) # put down pins           
                 basic_stim['fixation_point'].draw()
                 st.draw_contour(win,basic_stim)

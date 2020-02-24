@@ -49,6 +49,11 @@ def draw_basic(win, stim): # creates a dictionary with basic stimulus features
     # Circ. Mask
     basic_stim['circ_grating_mask'] = visual.RadialStim(win=win, mask="raisedCos" , opacity=0.5, size=stim['size_stim'], ori = 90, pos=[0,0], radialCycles=8, angularCycles=0, units = "deg", contrast = 0.8, maskParams = {'sd': 3} ) # , color = [1,0,1]
     
+    #--testing circle
+    basic_stim['white_test'] = visual.Circle(win=win, units="deg", radius=2.5, pos=[10,10], fillColor=[1, 1, 1],edges=64)
+
+   
+    
     # Response options Diagonal or Cardinal
     basic_stim['circle'] = visual.Circle(win=win,lineWidth = 10, units="deg", radius=2, lineColor=[1, 1, 1],edges=64)
     basic_stim['linev'] = visual.Line(win=win,lineWidth = 10,units="deg",lineColor=[1, 1, 1],start = [0, -2],end = [0, 2])
@@ -124,7 +129,13 @@ def monitor_def():
     monitor_def4['monitor_width'] = 30
     monitor_def4['distance2monitor'] = 60
     
-    monitors = [monitor_def1, monitor_def2, monitor_def3, monitor_def4]
+    monitor_def5 = {}
+    monitor_def5['monitor_name'] = 'asus_zulo' # monitor to use (make sure to define monitors in exp_monitors center.
+    monitor_def5['monitor_pixels']  = (1920,1080)
+    monitor_def5['monitor_width'] = 56
+    monitor_def5['distance2monitor'] = 55
+    
+    monitors = [monitor_def1, monitor_def2, monitor_def3, monitor_def4, monitor_def5]
     return monitors
         
         
