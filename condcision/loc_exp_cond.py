@@ -11,7 +11,7 @@ Lets code a functional localizer task
 # Alexis Perez-Bellido
 
 # exec(open('staircase_exp.py').read())
-version = 1.1
+version = 1.2
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
@@ -61,15 +61,15 @@ subj_id = expInfo['subjInfo']['observer']
 # Loading monitor definitions
 monitores = st.monitor_def() 
 
-mon, expInfo['monitor'] = exp.define_monitor(monitores[4]) # select the correct monitor
+mon, expInfo['monitor'] = exp.define_monitor(monitores[1]) # select the correct monitor
 
 # Creating a new experimental window
 monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = True
-monitor_features['Hz'] = "auto" #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
+monitor_features['full']  = False
+monitor_features['Hz'] = 60 #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
 win, monitor_features = exp.create_window(monitor_features)

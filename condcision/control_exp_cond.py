@@ -4,7 +4,7 @@
 # Code for the confirmation bias experiment (using predcision code)
 
 
-version = 1.1
+version = 1.2
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
@@ -63,7 +63,7 @@ monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = True
+monitor_features['full']  = False
 monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
@@ -86,7 +86,7 @@ basic_stim = st.draw_basic(win,stim)
 # Experimental condition preparation
 # response mapping (shuffled in each experiment )
 expInfo['resp_maps']  = np.array([0, 45]) # 0 -> cardinal; 45 -> diagonal
-
+expInfo['oddblock_repeat']  = np.random.randint(2) # determine whether odd N blocks are the ones with more repeated trials (1 repeat in odd, 0 repear in even blocks)
 
 # set path of stim file. Load the oriented trials dataset
 stimfile = os.path.join(os.getcwd(),'stim_matrix') # os.sep
@@ -127,11 +127,21 @@ staircase = data.StairHandler(startVal = guess,
                           minVal = 0.01, maxVal = 0.6,
                           nTrials= 1000) # 40
 
+# Experiment design
+stimList = []
+for rep in [1, 2, 3, 4]: # 75% vs 25% larger values than 1 in the CP & DP conditions correspond to one orientation
+            stimList.append({'Reps':rep}) #, 'n_reps': n_reps
+            
 main_exp  = {}
-main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
+main_exp['nblocks']     = 6 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
-main_exp['trial_reps']  = 40 
+main_exp['trial_reps']  = 8
 
+ 
+trials = data.TrialHandler(stimList, main_exp['trial_reps'], method='random') 
+
+
+    
 
 for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     instr.block_start(win)
@@ -141,31 +151,62 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     if sst: win.callOnFlip(p_port.write, tg_zero.encode())
     win.flip()
     
+    if thisBlock % 2 == 0:
+        block_type = 'odd'
+    else:
+        block_type = 'even'
+    
     BlockClockStart = Clock.getTime() # block experiment time
     block = {} # dummy variable to save block data
     correct_seq = np.array([]) # saving seq. of correct responses per trial sequence
     trial_rep = 0 # update staricase after each iteraction
-    thr_trials_var = [['subj','nblock', 'ntrial', 'nrep', 'cond', 'DV', 'resp', 'r_map', 'correct', 'RT']] # saving conditions here
+    thr_trials_var = [['subj','nblock', 'repblock', 'ntrial',  'nrep', 'repeat', 'cond', 'DV', 'resp', 'r_map', 'correct', 'RT']] # saving conditions here
     thr_trials_ori = [['o1','o2','o3','o4','o5','o6']]
     trialClocktimes = np.array([]) # saving whole times here
     
-    for iTrial in range(main_exp['trial_reps']):  # will continue the staircase until it terminates!
+    for thisTrial in trials:  # will continue the staircase until it terminates!
+        
+        repeat = False # decide if we have to repeat the information 3 times or not
+        
+        if expInfo['oddblock_repeat'] == 1: # en este experimento hay mas probabilidad de repetir trial si es el bloque es odd      
+            if block_type == 'even':
+                rep_block = 'no_rep' 
+                if thisTrial['Reps'] == 1:
+                    repeat = True
+            else:
+                rep_block = 'rep' 
+                if thisTrial['Reps'] > 1: 
+                    repeat = True
+        else:                             # in this experiment we have more probablility of repeating the trial if the block is even
+             if block_type == 'even':
+                rep_block = 'rep'  
+                if thisTrial['Reps'] > 1:
+                    repeat = True
+             else:
+                rep_block = 'no_rep'  
+                if thisTrial['Reps'] == 1:
+                    repeat = True
+             
+        
         thisIncrement = np.around(next(staircase),decimals = 5)
-        cond = np.random.choice([-1, 1])  # will be cardinal or diagonal
+        
         ExpClockTrial = Clock.getTime()
-        # decision variable in this trial
-        x =  cond*(thisIncrement)
-        print(x)
-       # x = -0.5
-        #sel_trials = decision_var_T[np.where((decision_var_T > x-0.001) & (decision_var_T < x+0.001))] # to return an array and not tuple
-        sel_trials = np.where((decision_var_T > x-0.025) & (decision_var_T < x+0.025))
-        trial_sel_idx = np.random.choice(sel_trials[0]) # selecting orientation vector for this trial.
-        t_orient = orientations[trial_sel_idx]
-        decision_avg = decision_var_T[trial_sel_idx] 
         
         fixation_color = [1, 1, 1]
         trial_perform = np.array([])
         for i_rep in range(stim['nreps']):
+            # changing the category randomly in each trial
+            if i_rep == 0 or repeat == False: # drawing a new orientation with the same incremenrt all the time but possible different orientation
+                cond = np.random.choice([-1, 1])  # will be cardinal or diagonal
+                x =  cond*(thisIncrement)
+                sel_trials = np.where((decision_var_T > x-0.025) & (decision_var_T < x+0.025))
+                trial_sel_idx = np.random.choice(sel_trials[0]) # selecting orientation vector for this trial.
+                t_orient = orientations[trial_sel_idx]
+                decision_avg = decision_var_T[trial_sel_idx]
+                
+            print(x)
+            print(rep_block)
+            print(repeat)
             # Initialize some default paratemers for this trial
             thisResp=None
             basic_stim['fixation_point'].color = fixation_color
@@ -343,7 +384,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 win.close()
                 core.quit
             # Storing data in variables           
-            thr_trials_var.append([subj_id, thisBlock , iTrial, i_rep, cond, x, thisResp[1], expInfo['resp_maps'][0], correct, rt_deci])# saving conditions here
+            thr_trials_var.append([subj_id, thisBlock, rep_block, trials.thisN, i_rep, repeat, cond, x, thisResp[1], expInfo['resp_maps'][0], correct, rt_deci])# saving conditions here
             thr_trials_ori.append(t_orient.tolist())
             
     # Get datafiles in pandas format and attack to main Exp.variable

@@ -4,7 +4,7 @@
 # Code for the confirmation bias experiment (using predcision code)
 
 
-version = 1.1
+version = 1.2
 
 #cd('/home/node2/Experiments/PreDCN-master/predcision')
 import numpy as np
