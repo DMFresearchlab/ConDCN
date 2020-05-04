@@ -133,12 +133,12 @@ for rep in [1, 2, 3, 4]: # 75% vs 25% larger values than 1 in the CP & DP condit
             stimList.append({'Reps':rep}) #, 'n_reps': n_reps
             
 main_exp  = {}
-main_exp['nblocks']     = 6 # 4 # totaltime = 90 * 6 * 5
+main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
-main_exp['trial_reps']  = 8
+main_exp['trial_reps']  = 5 
 
  
-trials = data.TrialHandler(stimList, main_exp['trial_reps'], method='random') 
+
 
 
     
@@ -152,9 +152,9 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     win.flip()
     
     if thisBlock % 2 == 0:
-        block_type = 'odd'
-    else:
         block_type = 'even'
+    else:
+        block_type = 'odd'
     
     BlockClockStart = Clock.getTime() # block experiment time
     block = {} # dummy variable to save block data
@@ -163,6 +163,8 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     thr_trials_var = [['subj','nblock', 'repblock', 'ntrial',  'nrep', 'repeat', 'cond', 'DV', 'resp', 'r_map', 'correct', 'RT']] # saving conditions here
     thr_trials_ori = [['o1','o2','o3','o4','o5','o6']]
     trialClocktimes = np.array([]) # saving whole times here
+    
+    trials = data.TrialHandler(stimList, main_exp['trial_reps'], method='random') 
     
     for thisTrial in trials:  # will continue the staircase until it terminates!
         
