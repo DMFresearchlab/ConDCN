@@ -1,4 +1,4 @@
-# ConCN v1.0
+# Condcision v1.0
 
 This is the first version of the condcision project (confirmation bias project)
 It includes a function to measure the participant threshold using a staircase, a functional localizer (it should be reviewed to check whether it is compatible with this new experiment) and the main experiment.
