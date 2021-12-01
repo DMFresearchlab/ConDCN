@@ -48,8 +48,8 @@ monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = False
-monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
+monitor_features['full']  = True
+monitor_features['Hz'] = 144 #'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
 win, monitor_features = exp.create_window(monitor_features)

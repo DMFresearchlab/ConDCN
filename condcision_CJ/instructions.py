@@ -43,8 +43,7 @@ def init_instructions(win, basic_stim, ifi):
     basic_stim['circle'].pos = np.array([6, 5])
     #basic_stim['linev'].lineColor = np.array([-1,-1,-1])
     
-    inst.text = "Tu tarea consiste en estimar si la orientación media de los estimulos presentados está más cerca de los ejes cardinales (vertical u horizonal)\
-    Tendrás que seleccionar la opción que consideres correcta con el ratón"
+    inst.text = "Tu tarea consiste en estimar si la orientación media de los estimulos presentados está más cerca de los ejes cardinales (vertical u horizonal)"
     basic_stim['lineh'].ori = 0
     basic_stim['linev'].ori = 0
     
@@ -66,7 +65,7 @@ def init_instructions(win, basic_stim, ifi):
         allKeys = event.getKeys()
         #print(allKeys)       
     
-    inst.text = "... o en los ejes diagonales pulsando la tecla ESPACIALMENTE congruente con el símbolo diagonal"
+    inst.text = "... o en los ejes diagonales, seleccionando con el rato el simbolo correcto"
     nextt.text = "Pulsa spacio para continuar"
     basic_stim['lineh'].ori = 45
     basic_stim['linev'].ori = 45
@@ -250,6 +249,14 @@ def end_experiment(win):
     return
 
 
+def end_experiment_lot(win, corr_lotery, nblocks):
+    inst = visual.TextStim(win, pos=[0,0], height = 1.2)
+    inst.text = 'Final de esta parte del experimento!! El participante ha ganado ' + str(sum(corr_lotery)) + ' puntos de ' + str(nblocks) + '. Avisa al investigador'     
+    inst.draw()
+    win.flip()
+    event.waitKeys(keyList = ["space"])
+    return
+
     
     
 
@@ -273,7 +280,7 @@ def lotery(win, block, ifi):
         #angle = np.random.uniform(0,1,1)
         trial_ix =  random.randint(0,n_trials-1)
         corr = block['data'].loc[trial_ix,'correct']
-        col = 'red' if corr == 0 else 'green'
+        col = 'red' if corr == -1 else 'green'
         number_text.text = trial_ix
         number_text.color = col
         
@@ -285,10 +292,11 @@ def lotery(win, block, ifi):
         allKeys = event.getKeys()
         
     allKeys = []
-    if corr:
-        inst.text = "Genial, has ganado! Pulsa -espacio- para continuar"
-    else:
+    
+    inst.text = "Genial, has ganado! Pulsa -espacio- para continuar"
+    if corr == -1:
         inst.text = "Oh! Qué mala suerte. Pulsa -espacio- para continuar"
+        
 
     inst.draw()
     number_text.draw()

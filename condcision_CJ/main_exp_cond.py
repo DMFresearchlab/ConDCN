@@ -69,8 +69,8 @@ monitor_features = {}
 monitor_features['monitor'] = mon
 monitor_features['units'] = 'deg' # units to define your stimuli
 monitor_features['screen_id'] = 0 # when using a extended display 
-monitor_features['full']  = False
-monitor_features['Hz'] = 'auto' #60 # this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
+monitor_features['full']  = True
+monitor_features['Hz'] =  'auto' #144 #60 this can be set to "auto" to estimate the refreshing rate of the monitor, although it can fail often
 
    
 win, monitor_features = exp.create_window(monitor_features)
@@ -136,11 +136,13 @@ for rep in [1, 2, 3, 4]: # 75% vs 25% larger values than 1 in the CP & DP condit
             
             
 main_exp  = {}
-main_exp['nblocks']     = 2 # 4 # totaltime = 90 * 6 * 5
+main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
-main_exp['trial_reps']  = 1 
+main_exp['trial_reps']  = 3# see that there are 4 combinations, so 10 = 10 * 4 trials
 
 # instr.block_ID(win, block_type)
+
+corr_lotery = []
 
 win.mouseVisible = False 
 
@@ -180,6 +182,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     thr_trials_var = [['subj','nblock', 'ntrial', 'nrep', 'blocktype', 'trial_type', 'cond', 'DV', 'resp', 'r_map', 'correct', 'confi', 'RT']] # saving conditions here
     thr_trials_ori = [['o1','o2','o3','o4','o5','o6']]
     trialClocktimes = np.array([]) # saving whole times here
+    correct_seq = np.array([]) # saving seq. of correct responses per trial sequence
     
     trials = data.TrialHandler(stimList, main_exp['trial_reps'], method='random') 
     
@@ -360,7 +363,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                 print("incorrect")
                 correct = -1  # incorrect
             trial_perform = np.append(trial_perform, correct) 
-            
+            correct_seq = np.append(correct_seq, correct)
 
                 
             for i_si in range(stim['wait_feedback_frames']): # wait time for feedback and send a couple of triggers
@@ -377,6 +380,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
             #print(correct)
             print(trial_perform)
             if i_rep == 0: staircase.addResponse(correct) # adding information to staircase
+            st.resp_option(win, basic_stim, expInfo['resp_maps'][0], black_resps[1], np.array([-2,-7]))
             if i_rep == 1:
                 for i_si in range(stim['feedback_frames']): # time added between trials
                     st.draw_mask(win, basic_stim)
@@ -402,9 +406,9 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
                     st.draw_contour(win,basic_stim)                
                     t = win.flip()
                     #print('Overall, %i frames were dropped.' % win.nDroppedFrames)
-            
-            
-            
+                    
+ #st.resp_mapping(win, st.resp_option, basic_stim,  expInfo['resp_maps'], black_resps)
+                    
             
             trial_times = np.array(trial_times) 
             trialClocktimes = np.vstack([trialClocktimes, trial_times]) if trialClocktimes.size else trial_times  
@@ -436,8 +440,8 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     main_frame_log['timings'] = trialClocktimes
     block['main_frame_log'] = main_frame_log 
     main_exp['Exp_blocks'][thisBlock] =  block  # saving block data
-    
-    
+    cr_lot = instr.lotery(win, block, ifi)
+    corr_lotery.append(cr_lot) # lotery win or lost    
     toFile(resultspath, expInfo) #saving file to disk
             #trialClocktimes.append(trial_times)
         # Get datafiles in pandas format and attack to main Exp.variable
@@ -446,6 +450,7 @@ approxThreshold = np.average(staircase.reversalIntensities[-5:])
 
 main_exp['monitor_features'] = monitor_features
 main_exp['stim'] = stim
+main_exp['lotery'] = corr_lotery
 
 expInfo['subjInfo']['guess'] = approxThreshold  # save threshold for next experiment
 
@@ -457,11 +462,19 @@ print('Overall, %i frames were dropped.' % win.nDroppedFrames)
 
 
 toFile(resultspath, expInfo) #saving file to disk
+nblocks = main_exp['nblocks']
 
-instr.end_experiment(win)
+corr_lotery = np.array(corr_lotery)
+corr_lotery[corr_lotery == - 1] = 0;
+
+
+
+instr.end_experiment_lot(win, corr_lotery, nblocks)
 
 # closing everything
 win.close()
+
+print('El participante ha ganado ' + str(sum(corr_lotery)) + ' puntos de ' + str(main_exp['nblocks']))
 
 core.quit
 

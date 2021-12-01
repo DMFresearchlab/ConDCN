@@ -104,14 +104,14 @@ def monitor_def():
     monitor_def1 = {}
     monitor_def1['monitor_name'] = 'mundet_screen' # monitor to use (make sure to define monitors in exp_monitors center.
     monitor_def1['monitor_pixels']  = (1920, 1080)
-    monitor_def1['monitor_width'] = 54
+    monitor_def1['monitor_width'] = 53
     monitor_def1['distance2monitor'] = 50
     
     monitor_def2 = {}
-    monitor_def2['monitor_name'] = 'multiple2' # monitor to use (make sure to define monitors in exp_monitors center.
-    monitor_def2['monitor_pixels']  = (1024, 768)
-    monitor_def2['monitor_width'] = 30
-    monitor_def2['distance2monitor'] = 40
+    monitor_def2['monitor_name'] = 'multiple1' # monitor to use (make sure to define monitors in exp_monitors center.
+    monitor_def2['monitor_pixels']  = (1920, 1080)
+    monitor_def2['monitor_width'] = 53
+    monitor_def2['distance2monitor'] = 50
     
     monitor_def3 = {}
     monitor_def3['monitor_name'] = 'asus_home' # monitor to use (make sure to define monitors in exp_monitors center.
