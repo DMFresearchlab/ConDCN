@@ -220,6 +220,19 @@ def block_loc_start(win):
     event.waitKeys( keyList=['space'])
     core.wait(1)
     return
+    
+    
+def new_trial(win):
+    inst = visual.TextStim(win, pos = [0,0])
+    inst.wrapWidth = 20
+    inst.height = 0.7
+    inst.color = 'white'
+    inst.text = "Nuevo trial"
+    inst.draw()
+    win.flip()
+    core.wait(0.75)
+    return
+
 
 
     

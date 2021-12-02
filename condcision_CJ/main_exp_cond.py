@@ -138,12 +138,13 @@ for rep in [1, 2, 3, 4]: # 75% vs 25% larger values than 1 in the CP & DP condit
 main_exp  = {}
 main_exp['nblocks']     = 4 # 4 # totaltime = 90 * 6 * 5
 main_exp['Exp_blocks']  = [None] * main_exp['nblocks'] # assigning memory for storing block data
-main_exp['trial_reps']  = 3# see that there are 4 combinations, so 10 = 10 * 4 trials
+main_exp['trial_reps']  = 11# see that there are 4 combinations, so 10 = 10 * 4 trials
 
 # instr.block_ID(win, block_type)
 
 corr_lotery = []
-
+mouse = event.Mouse(visible = True)
+mouse.setPos([0,0])
 win.mouseVisible = False 
 
 for thisBlock in range(main_exp['nblocks']): # iterate over blocks
@@ -189,11 +190,11 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
     for thisTrial in trials:  # will continue the staircase until it terminates!        
         if block_type == 'repeat': # decide if in this block we will repeat the same information 2 times or not
             repeat = True
-            if thisTrial['Reps'] == 4:
+            if thisTrial['Reps'] == 30: # lets make all the trials similar
                 repeat = False # Unrepeated blocks
         if block_type == 'nonrepeat': # decide if in this block we will repeat the same information 2 times or not
             repeat = False
-            if thisTrial['Reps'] == 4:
+            if thisTrial['Reps'] == 30:
                 repeat = True
                 
         thisIncrement = np.around(next(staircase),decimals = 5)
@@ -205,9 +206,10 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
         print(x)       
         fixation_color = [1, 1, 1]
         trial_perform = np.array([])
+        instr.new_trial(win)
         
-        for i_rep in range(stim['nreps']):     
-            
+        for i_rep in range(stim['nreps']): 
+             
             if  i_rep == 0 or repeat == False:
                 sel_trials = np.where((decision_var_T > x-0.025) & (decision_var_T < x+0.025))
                 trial_sel_idx = np.random.choice(sel_trials[0]) # selecting orientation vector for this trial.
@@ -221,9 +223,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
             col_resp = [1, 1, 1]
             trialClockStart = Clock.getTime()        
             np.random.shuffle(expInfo['resp_maps']) # Shuffling resp_map -> first response option (cardignal or diagonal) will be placed at left, and second at right
-            
-            
-            
+                
             stim['ISI1_frames'] = round(np.random.randint(800,900)/ifi)  # fixation alone
             for i_si in range(stim['ISI1_frames']): # first period before the first beep
                 st.fixation(win, basic_stim)
@@ -351,6 +351,7 @@ for thisBlock in range(main_exp['nblocks']): # iterate over blocks
             
             confi = confi_slider.rating
             win.mouseVisible = False # hide mouse
+            mouse.setPos([0,0])
             
             if (x > 0 and resp_ang > 0) or (x < 0 and  resp_ang < 0):
                 correct = 1  # correct
